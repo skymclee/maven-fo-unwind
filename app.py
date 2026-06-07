@@ -466,6 +466,40 @@ def sidebar_filters(df):
 # ---------------------------------------------------------------------------
 # Tab 1: Summary
 # ---------------------------------------------------------------------------
+def _stat_card(label, value, accent=None):
+    """Render a styled stat card as inline HTML."""
+    if accent is None:
+        accent = GREEN
+    return f"""
+<div style="
+    background: linear-gradient(135deg, #f7fbf9 0%, #eef5f0 100%);
+    border: 1px solid #c8dfd0;
+    border-top: 4px solid {accent};
+    border-radius: 6px;
+    padding: 20px 18px 16px 18px;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(26,58,92,0.07);
+    height: 100%;
+">
+    <div style="
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: #5a7fa0;
+        margin-bottom: 10px;
+    ">{label}</div>
+    <div style="
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 1.65rem;
+        font-weight: 700;
+        color: #1a3a5c;
+        line-height: 1.15;
+    ">{value}</div>
+</div>"""
+
+
 def tab_summary(df):
     ret_cols = HORIZON_COLS
     has_data = df[ret_cols].notna().any(axis=1)
@@ -474,12 +508,17 @@ def tab_summary(df):
     date_min     = df["Pricing Date"].min().strftime("%b %Y")
     date_max     = df["Pricing Date"].max().strftime("%b %Y")
 
-    c1, c2, c3, c4, c5 = st.columns(5)
-    c1.metric("Total Deals",      f"{total_n:,}")
-    c2.metric("From",             date_min)
-    c3.metric("To",               date_max)
-    c4.metric("Valid Price Data", f"{pct_data:.0%} ({has_data.sum():,})")
-    c5.metric("Regions Covered",  df["Region"].nunique())
+    cards = [
+        ("Total Deals",      f"{total_n:,}",                   NAVY),
+        ("From",             date_min,                          GREEN),
+        ("To",               date_max,                          GREEN),
+        ("Valid Price Data", f"{pct_data:.0%}  ({has_data.sum():,})", NAVY),
+        ("Regions Covered",  str(df["Region"].nunique()),        NAVY),
+    ]
+    cols = st.columns(5)
+    for col, (label, value, accent) in zip(cols, cards):
+        col.markdown(_stat_card(label, value, accent), unsafe_allow_html=True)
+    st.markdown("<div style='margin-top:8px'></div>", unsafe_allow_html=True)
 
     st.markdown("---")
 
@@ -885,6 +924,23 @@ def main():
         font-family: 'Times New Roman', Times, serif !important;
         font-size: 15px;
     }}
+
+    /* Restore Material Icons font for Streamlit's UI icon elements.
+       Without this, our !important override above renders icons as raw text
+       (e.g. "arrow_right", "keyboard_double_arrow_left"). */
+    [data-testid="stIconMaterial"],
+    span[data-testid="stIconMaterial"] {{
+        font-family: 'Material Icons', 'Material Symbols Rounded' !important;
+        font-size: 1.15rem !important;
+        font-style: normal !important;
+        font-weight: 400 !important;
+        letter-spacing: normal !important;
+        text-transform: none !important;
+        display: inline-block !important;
+        direction: ltr !important;
+        -webkit-font-feature-settings: 'liga';
+        font-feature-settings: 'liga';
+    }}
     p, li, .stMarkdown p, .element-container p {{
         font-size: 15px !important;
         font-weight: 500 !important;
@@ -940,26 +996,6 @@ def main():
     }}
 
     /* ---- Metric cards ---- */
-    [data-testid="metric-container"] {{
-        background: #f7fbf9;
-        border: 1px solid #2e7d4f;
-        border-radius: 4px;
-        padding: 14px 18px;
-    }}
-    [data-testid="metric-container"] label {{
-        color: #1a3a5c !important;
-        font-weight: 700;
-        font-size: 0.82rem;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-    }}
-    [data-testid="metric-container"] [data-testid="metric-value"] {{
-        color: #1a3a5c !important;
-        font-size: 1.4rem !important;
-        font-weight: 700 !important;
-        white-space: normal !important;
-    }}
-
     /* ---- Tabs ---- */
     div[data-testid="stTabs"] button {{
         font-family: 'Times New Roman', Times, serif !important;
