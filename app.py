@@ -19,7 +19,7 @@ import streamlit as st
 # Config
 # ---------------------------------------------------------------------------
 st.set_page_config(
-    page_title="Maven | North Asia FO Unwind",
+    page_title="Maven | North Asia FO Unwind — Sky Lee",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -54,13 +54,17 @@ LABEL_ORDER   = [HORIZON_LABELS[h] for h in HORIZON_ORDER]
 DEAL_SIZE_ORDER = ["Small (<$100M)", "Mid ($100-500M)", "Large (>$500M)"]
 MCAP_ORDER      = ["Small Cap (<$1B)", "Mid Cap ($1-10B)", "Large Cap (>$10B)"]
 
+NAVY   = "#1a3a5c"
+GREEN  = "#2e7d4f"
 COLORS = {
-    "HK/China": "#1f77b4",
-    "Japan":    "#ff7f0e",
-    "Korea":    "#2ca02c",
+    "HK/China": NAVY,
+    "Japan":    GREEN,
+    "Korea":    "#4caf80",   # lighter green for the third series
 }
 
 PLOTLY_TEMPLATE = "plotly_white"
+# Continuous colour sequence used by bar / line charts: navy → green
+MAVEN_COLORS = [NAVY, GREEN, "#4caf80", "#a8d5b5", "#8dafc4", "#c0cfe0"]
 
 # ---------------------------------------------------------------------------
 # Data loading
@@ -216,6 +220,7 @@ def mean_return_line(mdf, title="Mean Return by Horizon", color_col=None):
             category_orders={"label": LABEL_ORDER},
             template=PLOTLY_TEMPLATE,
             title=title,
+            color_discrete_sequence=MAVEN_COLORS,
         )
     else:
         fig = px.line(
@@ -225,6 +230,7 @@ def mean_return_line(mdf, title="Mean Return by Horizon", color_col=None):
             category_orders={"label": LABEL_ORDER},
             template=PLOTLY_TEMPLATE,
             title=title,
+            color_discrete_sequence=[NAVY],
         )
     fig.update_layout(
         xaxis_title="Horizon (trading days post-pricing)",
@@ -245,7 +251,7 @@ def pct_positive_bar(mdf, title="% Deals with Positive Return"):
         category_orders={"label": LABEL_ORDER},
         template=PLOTLY_TEMPLATE,
         title=title,
-        color_discrete_sequence=["#2c7bb6"],
+        color_discrete_sequence=[GREEN],
     )
     fig.add_hline(y=0.5, line_dash="dash", line_color="gray",
                   annotation_text="50%", annotation_position="right")
@@ -267,6 +273,7 @@ def grouped_bar(long_df, x_col, y_col, color_col, title, y_fmt=".1%"):
         category_orders={"label": LABEL_ORDER},
         template=PLOTLY_TEMPLATE,
         title=title,
+        color_discrete_sequence=MAVEN_COLORS,
     )
     fig.update_layout(
         xaxis_title="Horizon",
@@ -298,8 +305,8 @@ def sector_heatmap(df_all, min_n=1):
         x=hm_df.columns.tolist(),
         y=hm_df.index.tolist(),
         colorscale=[
-            [0.0, "#d73027"], [0.4, "#f7f7f7"], [0.5, "#f7f7f7"],
-            [0.6, "#f7f7f7"], [1.0, "#1a9641"]
+            [0.0, "#c0392b"], [0.4, "#f5f5f5"], [0.5, "#f5f5f5"],
+            [0.6, "#f5f5f5"], [1.0, GREEN]
         ],
         zmid=0,
         text=np.where(
@@ -327,7 +334,8 @@ def deal_trajectory_chart(row):
             x.append(HORIZON_LABELS[h])
             y.append(val)
     fig = go.Figure(go.Scatter(x=x, y=y, mode="lines+markers",
-                               line=dict(color="#1f77b4", width=2)))
+                               line=dict(color=NAVY, width=2),
+                               marker=dict(color=GREEN, size=8)))
     fig.add_hline(y=0, line_dash="dash", line_color="gray")
     fig.update_layout(
         title=f"{row.get('Issuer', 'Deal')} ({row.get('Ticker', '')})",
@@ -580,8 +588,9 @@ def tab_characteristics(df):
     pivot_pp = pivot_pp.sort_index()
 
     fig2 = go.Figure()
-    for yr in sorted(pivot_pp.columns):
-        fig2.add_trace(go.Bar(name=str(yr), x=pivot_pp.index.tolist(), y=pivot_pp[yr]))
+    for yr, colour in zip(sorted(pivot_pp.columns), MAVEN_COLORS):
+        fig2.add_trace(go.Bar(name=str(yr), x=pivot_pp.index.tolist(),
+                              y=pivot_pp[yr], marker_color=colour))
     fig2.update_layout(
         barmode="group",
         title="% Deals Positive at Each Horizon — by Year",
@@ -791,21 +800,30 @@ def tab_interactions(df, min_n):
 # Main
 # ---------------------------------------------------------------------------
 def main():
-    # CSS overrides for professional look
+    # CSS overrides — Maven navy/green brand
     st.markdown("""
     <style>
-    .metric-card {font-size: 0.9rem;}
     [data-testid="metric-container"] {
-        background: #f8f9fa;
-        border: 1px solid #e0e0e0;
+        background: #eaf4ed;
+        border: 1px solid #2e7d4f;
         border-radius: 8px;
         padding: 12px 16px;
     }
-    div[data-testid="stTabs"] button {font-size: 0.95rem; font-weight: 600;}
+    [data-testid="metric-container"] label {color: #1a3a5c !important; font-weight: 600;}
+    div[data-testid="stTabs"] button {font-size: 0.95rem; font-weight: 600; color: #1a3a5c;}
+    div[data-testid="stTabs"] button[aria-selected="true"] {
+        border-bottom: 3px solid #2e7d4f;
+        color: #2e7d4f !important;
+    }
+    section[data-testid="stSidebar"] {background: #0d1f2d;}
+    section[data-testid="stSidebar"] * {color: #eaf4ed !important;}
+    section[data-testid="stSidebar"] .stMarkdown p {color: #a8d5b5 !important;}
+    h1 {color: #1a3a5c !important;}
+    h2, h3, h4 {color: #1a3a5c !important;}
     </style>
     """, unsafe_allow_html=True)
 
-    st.title("Maven Securities — North Asia Follow-On Unwind Analysis")
+    st.title("Maven Securities — North Asia Follow-On Unwind Analysis | Sky Lee")
     st.markdown(
         "Analysing **follow-on / placement deals** in HK/China, Japan, and Korea "
         "from 2022 to YTD 2026. Returns are measured vs the local-currency offer price."
