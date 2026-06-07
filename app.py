@@ -15,6 +15,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import streamlit as st
+import streamlit.components.v1 as components
 
 # ---------------------------------------------------------------------------
 # Config
@@ -65,7 +66,7 @@ COLORS = {
 
 PLOTLY_TEMPLATE = "plotly_white"
 MAVEN_COLORS    = [NAVY, GREEN, "#4caf80", "#a8d5b5", "#8dafc4", "#c0cfe0"]
-PLOTLY_FONT     = dict(family="Times New Roman, Times, serif", size=12, color="#0d1f2d")
+PLOTLY_FONT     = dict(family="Times New Roman, Times, serif", size=14, color="#0d1f2d")
 
 
 @st.cache_data(show_spinner=False)
@@ -388,10 +389,10 @@ def style_metrics_table(mdf):
     disp["sharpe"]  = disp["sharpe"].map(lambda x: fmt_f(x))
     disp["n"]       = disp["n"].astype(int)
     disp = disp.rename(columns={
-        "label": "Horizon", "mean": "Mean Return", "median": "Median Return",
-        "pct_pos": "% Positive", "std": "Std Dev", "sharpe": "Sharpe Ratio", "n": "N"
+        "label": "Horizon", "mean": "Mean", "median": "Median",
+        "pct_pos": "% Pos.", "std": "Std Dev", "sharpe": "Sharpe", "n": "N"
     })
-    return disp[["Horizon", "Mean Return", "Median Return", "% Positive", "Std Dev", "Sharpe Ratio", "N"]]
+    return disp[["Horizon", "Mean", "Median", "% Pos.", "Std Dev", "Sharpe", "N"]]
 
 
 # ---------------------------------------------------------------------------
@@ -405,13 +406,39 @@ def sidebar_filters(df):
     years    = ["All"] + sorted(df["Year"].unique().tolist())
     types    = ["All"] + sorted(df["Type"].dropna().unique().tolist())
 
-    sel_region  = st.sidebar.multiselect("Region",     regions,  default=["All"])
-    sel_sector  = st.sidebar.multiselect("Sector",     sectors,  default=["All"])
-    sel_size    = st.sidebar.multiselect("Deal Size",  sizes,    default=["All"])
-    sel_mcap    = st.sidebar.multiselect("Market Cap", mcaps,    default=["All"])
-    sel_year    = st.sidebar.multiselect("Year",       years,    default=["All"])
-    sel_type    = st.sidebar.multiselect("Deal Type",  types,    default=["All"])
-    min_n       = st.sidebar.slider("Min deals for breakdowns", 1, 20, 5)
+    def exclusive_ms(label, options, skey):
+        """Multiselect where 'All' and specific options are mutually exclusive.
+        Selecting 'All' clears everything else; selecting a specific item removes 'All'."""
+        prev_key = f"_prev_{skey}"
+        if skey not in st.session_state:
+            st.session_state[skey] = ["All"]
+        if prev_key not in st.session_state:
+            st.session_state[prev_key] = ["All"]
+
+        def _on_change():
+            cur = list(st.session_state.get(skey, ["All"]))
+            old = list(st.session_state.get(prev_key, ["All"]))
+            if not cur:
+                st.session_state[skey] = ["All"]
+            elif "All" in cur and len(cur) > 1:
+                if "All" not in old:
+                    # "All" was just added — clear specific items
+                    st.session_state[skey] = ["All"]
+                else:
+                    # A specific item was added while "All" was present — drop "All"
+                    st.session_state[skey] = [x for x in cur if x != "All"]
+            st.session_state[prev_key] = list(st.session_state.get(skey, ["All"]))
+
+        st.sidebar.multiselect(label, options, key=skey, on_change=_on_change)
+        return list(st.session_state.get(skey, ["All"]))
+
+    sel_region = exclusive_ms("Region",     regions, "flt_region")
+    sel_sector = exclusive_ms("Sector",     sectors, "flt_sector")
+    sel_size   = exclusive_ms("Deal Size",  sizes,   "flt_size")
+    sel_mcap   = exclusive_ms("Market Cap", mcaps,   "flt_mcap")
+    sel_year   = exclusive_ms("Year",       years,   "flt_year")
+    sel_type   = exclusive_ms("Deal Type",  types,   "flt_type")
+    min_n      = st.sidebar.slider("Min deals for breakdowns", 1, 20, 5)
 
     st.sidebar.markdown("---")
     st.sidebar.markdown(
@@ -447,11 +474,12 @@ def tab_summary(df):
     date_min     = df["Pricing Date"].min().strftime("%b %Y")
     date_max     = df["Pricing Date"].max().strftime("%b %Y")
 
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Total Deals",       f"{total_n:,}")
-    c2.metric("Date Range",        f"{date_min} – {date_max}")
-    c3.metric("Valid Price Data",  f"{pct_data:.0%} ({has_data.sum():,})")
-    c4.metric("Regions Covered",   df["Region"].nunique())
+    c1, c2, c3, c4, c5 = st.columns(5)
+    c1.metric("Total Deals",      f"{total_n:,}")
+    c2.metric("From",             date_min)
+    c3.metric("To",               date_max)
+    c4.metric("Valid Price Data", f"{pct_data:.0%} ({has_data.sum():,})")
+    c5.metric("Regions Covered",  df["Region"].nunique())
 
     st.markdown("---")
 
@@ -511,9 +539,19 @@ def tab_region(df):
     st.plotly_chart(fig_bar, use_container_width=True)
 
     st.markdown("#### Region × Horizon — Full Metrics")
+    _col_cfg = {
+        "Horizon": st.column_config.TextColumn(width="small"),
+        "Mean":    st.column_config.TextColumn(width="small"),
+        "Median":  st.column_config.TextColumn(width="small"),
+        "% Pos.":  st.column_config.TextColumn(width="small"),
+        "Std Dev": st.column_config.TextColumn(width="small"),
+        "Sharpe":  st.column_config.TextColumn(width="small"),
+        "N":       st.column_config.NumberColumn(width="small"),
+    }
     for region, mdf in rmet.items():
-        with st.expander(f"**{region}** (n deals varies by horizon)", expanded=False):
-            st.dataframe(style_metrics_table(mdf), use_container_width=True, hide_index=True)
+        with st.expander(f"{region}  —  n deals varies by horizon", expanded=False):
+            st.dataframe(style_metrics_table(mdf), use_container_width=True,
+                         hide_index=True, height=420, column_config=_col_cfg)
 
     # Compact combined table
     combined = long_df.copy()
@@ -627,9 +665,19 @@ def tab_characteristics(df):
     st.plotly_chart(fig_bar, use_container_width=True)
 
     st.markdown("#### Deal Type — Full Metrics")
+    _col_cfg2 = {
+        "Horizon": st.column_config.TextColumn(width="small"),
+        "Mean":    st.column_config.TextColumn(width="small"),
+        "Median":  st.column_config.TextColumn(width="small"),
+        "% Pos.":  st.column_config.TextColumn(width="small"),
+        "Std Dev": st.column_config.TextColumn(width="small"),
+        "Sharpe":  st.column_config.TextColumn(width="small"),
+        "N":       st.column_config.NumberColumn(width="small"),
+    }
     for dtype, mdf in type_met.items():
-        with st.expander(f"**{dtype}**", expanded=False):
-            st.dataframe(style_metrics_table(mdf), use_container_width=True, hide_index=True)
+        with st.expander(dtype, expanded=False):
+            st.dataframe(style_metrics_table(mdf), use_container_width=True,
+                         hide_index=True, height=420, column_config=_col_cfg2)
 
     st.markdown("---")
     st.markdown("### Pricing Discount vs Subsequent Return")
@@ -754,7 +802,11 @@ def tab_explorer(df):
             "Type": row["Type"],
             "Discount to Last Trade": fmt_pct(row["Pricing Discount - To Last Trade"]),
         }
-        st.json(meta)
+        items = list(meta.items())
+        mid = (len(items) + 1) // 2
+        ka, kb = st.columns(2)
+        for i, (k, v) in enumerate(items):
+            (ka if i < mid else kb).markdown(f"**{k}:** {v}")
 
     st.markdown("---")
     st.markdown("#### Deals with Missing Price Data")
@@ -823,15 +875,26 @@ def main():
     st.markdown(f"""
     <style>
     /* ---- Typography ---- */
+    html, body {{
+        font-size: 16px;
+        font-weight: 500;
+    }}
     html, body, [class*="css"], .stApp, .stMarkdown,
     .stTextInput, .stSelectbox, .stMultiSelect, .stSlider,
     button, input, label, p, span, div {{
         font-family: 'Times New Roman', Times, serif !important;
+        font-size: 15px;
+    }}
+    p, li, .stMarkdown p, .element-container p {{
+        font-size: 15px !important;
+        font-weight: 500 !important;
+        line-height: 1.6;
     }}
     h1, h2, h3, h4, h5, h6 {{
         font-family: 'Times New Roman', Times, serif !important;
         color: #1a3a5c !important;
         letter-spacing: 0.02em;
+        font-weight: 700 !important;
     }}
 
     /* ---- Page background ---- */
@@ -885,20 +948,22 @@ def main():
     }}
     [data-testid="metric-container"] label {{
         color: #1a3a5c !important;
-        font-weight: 600;
-        font-size: 0.78rem;
+        font-weight: 700;
+        font-size: 0.82rem;
         text-transform: uppercase;
         letter-spacing: 0.06em;
     }}
     [data-testid="metric-container"] [data-testid="metric-value"] {{
         color: #1a3a5c !important;
-        font-size: 1.5rem !important;
+        font-size: 1.4rem !important;
+        font-weight: 700 !important;
+        white-space: normal !important;
     }}
 
     /* ---- Tabs ---- */
     div[data-testid="stTabs"] button {{
         font-family: 'Times New Roman', Times, serif !important;
-        font-size: 1.05rem;
+        font-size: 1.1rem;
         font-weight: 700;
         color: #4a6278;
         letter-spacing: 0.03em;
@@ -954,6 +1019,28 @@ def main():
     section[data-testid="stSidebar"] > div:first-child > button {{ display: none !important; }}
     </style>
     """, unsafe_allow_html=True)
+
+    # ------------------------------------------------------------------
+    # Block Streamlit's 'C' keyboard shortcut when ⌘/Ctrl is held so that
+    # ⌘C copies text normally instead of clearing the cache.
+    # The capture-phase listener stops the event before Streamlit's
+    # bubble-phase handler sees it; the browser's native copy is unaffected
+    # because it operates at the OS level independently of JS handlers.
+    # ------------------------------------------------------------------
+    components.html("""
+<script>
+(function() {
+    function blockShortcut(e) {
+        if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
+            try { e.stopPropagation(); } catch(_) {}
+        }
+    }
+    try {
+        window.parent.document.addEventListener('keydown', blockShortcut, true);
+    } catch(_) {}
+})();
+</script>
+""", height=0, scrolling=False)
 
     # ------------------------------------------------------------------
     # Header banner (logo + title)
