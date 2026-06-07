@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Source Sans 3', sans-serif; background: #fff; color: #111; width: 794px; }
+  .page { width: 794px; padding: 0 32px 32px; display: flex; flex-direction: column; }
+
+  .header { background: #0A1628; margin: 0 -32px; padding: 24px 32px 20px; margin-bottom: 20px; }
+  .header h1 { font-family: 'Playfair Display', serif; font-size: 30px; color: #fff; line-height: 1.15; letter-spacing: -0.3px; }
+  .header .byline { font-size: 13px; color: #5C8AB0; margin-top: 6px; }
+
+  .stat-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 20px; }
+  .stat { background: #F4F7FB; border-radius: 8px; padding: 12px 13px; border-top: 2.5px solid #1E4D8C; }
+  .stat .val { font-family: 'Playfair Display', serif; font-size: 21px; font-weight: 700; color: #0A1628; line-height: 1; }
+  .stat .lbl { font-size: 10px; color: #6B7A8D; margin-top: 5px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+  .stat .sub { font-size: 10px; color: #94A3B8; margin-top: 2px; }
+
+  .sec { font-size: 11px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; color: #1E4D8C; border-left: 3px solid #1E4D8C; padding-left: 9px; margin-bottom: 10px; }
+
+  .exec-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-bottom: 20px; border: 0.5px solid #CBD5E0; border-radius: 8px; overflow: hidden; }
+  .exec-main { padding: 16px 18px; background: #0A1628; }
+  .exec-main .headline { font-family: 'Source Sans 3', sans-serif; font-size: 13px; font-weight: 400; color: #fff; line-height: 1.7; }
+  .exec-main .headline strong { color: #7BBFEA; font-weight: 700; }
+  .exec-bullets { padding: 14px 18px; background: #F4F7FB; }
+  .exec-bullets ul { list-style: none; padding: 0; }
+  .exec-bullets ul li { font-family: 'Source Sans 3', sans-serif; font-size: 13px; font-weight: 400; color: #1A2C4A; line-height: 1.55; padding: 5px 0 5px 14px; position: relative; border-bottom: 0.5px solid #E2EAF4; }
+  .exec-bullets ul li:last-child { border-bottom: none; }
+  .exec-bullets ul li::before { content: "▸"; position: absolute; left: 0; color: #1E4D8C; font-size: 9px; top: 7px; }
+  .exec-bullets ul li strong { color: #0A1628; font-weight: 700; }
+
+  .three-col { display: grid; grid-template-columns: 1.05fr 0.95fr 0.9fr; gap: 12px; margin-bottom: 20px; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { background: #0A1628; color: #fff; padding: 8px 10px; font-weight: 700; font-size: 11px; text-align: center; font-family: 'Source Sans 3', sans-serif; }
+  th:first-child { text-align: left; }
+  td { padding: 7px 10px; border-bottom: 0.5px solid #EDF2F7; text-align: center; color: #2D3748; font-size: 13px; font-family: 'Source Sans 3', sans-serif; }
+  td:first-child { text-align: left; font-weight: 600; color: #1A2C4A; }
+  tr:nth-child(even) td { background: #F8FAFD; }
+  tr:first-child td { background: #EBF4FF; }
+  .pos { color: #1A6B3C; font-weight: 700; }
+  .neg { color: #9B2335; font-weight: 700; }
+  .neu { color: #5A6B7D; }
+  .star { color: #1E4D8C; font-weight: 700; }
+  .hi { background: #E6F4EA !important; }
+
+  .strat-section { margin-bottom: 20px; }
+  .strat-table th { font-size: 10.5px; }
+  .strat-table td { font-size: 13px; padding: 8px 10px; }
+  .strat-table .rec { font-weight: 700; }
+  .strat-table tr.best td { background: #F0FFF4; }
+  .strat-table tr.warn td { background: #FFFBEB; }
+  .strat-table tr:nth-child(even):not(.best):not(.warn) td { background: #F8FAFD; }
+
+  .bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+  .insight { border-radius: 8px; padding: 13px 15px; border-left: 4px solid #1E4D8C; background: #F4F7FB; }
+  .insight.warn { border-left-color: #B45309; background: #FFFBEB; }
+  .insight .ititle { font-size: 11px; font-weight: 700; color: #0A1628; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.6px; }
+  .insight ul { list-style: none; padding: 0; }
+  .insight ul li { font-family: 'Source Sans 3', sans-serif; font-size: 13px; font-weight: 400; color: #2D3748; line-height: 1.55; padding: 4px 0 4px 14px; position: relative; border-bottom: 0.5px solid #E2EAF4; }
+  .insight ul li:last-child { border-bottom: none; }
+  .insight ul li::before { content: "▸"; position: absolute; left: 0; color: #1E4D8C; font-size: 9px; top: 6px; }
+  .insight.warn ul li::before { color: #B45309; }
+  .insight ul li strong { color: #0A1628; font-weight: 700; }
+
+  .extra-credit { background: #FFFBEB; border: 1.5px solid #D97706; border-radius: 8px; padding: 13px 16px; }
+  .ec-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .ec-badge { background: #D97706; color: #fff; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; letter-spacing: 0.6px; text-transform: uppercase; white-space: nowrap; }
+  .ec-title { font-size: 13px; font-weight: 700; color: #92400E; }
+  .ec-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .ec-item { background: #fff; border: 0.5px solid #FCD34D; border-radius: 6px; padding: 9px 11px; }
+  .ec-item .ec-name { font-size: 13px; font-weight: 700; color: #0A1628; }
+  .ec-item .ec-meta { font-size: 11px; color: #6B7A8D; margin-top: 3px; }
+  .ec-item .ec-reason { font-size: 11px; color: #92400E; margin-top: 3px; font-style: italic; line-height: 1.4; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <h1>North Asia Follow-On Unwind Study</h1>
+    <div class="byline">Sky Lee</div>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat"><div class="val">607</div><div class="lbl">Deals Analysed</div><div class="sub">Jan 2022 – Jun 2026</div></div>
+    <div class="stat"><div class="val">93%</div><div class="lbl">D1 Open Hit Rate</div><div class="sub">Sharpe 0.30 — peak horizon</div></div>
+    <div class="stat"><div class="val">+9.13%</div><div class="lbl">Japan D126 Mean</div><div class="sub">vs −3.94% HK/China</div></div>
+    <div class="stat"><div class="val">p=0.042</div><div class="lbl">Regional Divergence</div><div class="sub">Welch's t-test · JP vs HK at D63</div></div>
+    <div class="stat"><div class="val">−0.304</div><div class="lbl">Discount Paradox</div><div class="sub">Deeper discount → lower return</div></div>
+  </div>
+
+  <div class="sec">Executive Summary</div>
+  <div class="exec-wrap">
+    <div class="exec-main">
+      <div class="headline">Day 1 Open delivers the strongest risk-adjusted return across all 607 deals — <strong>+4.80% mean, 93% positive, Sharpe 0.30</strong> — the highest of any horizon. Returns decay monotonically from Day 2 onward in the aggregate, with the Sharpe falling from 0.30 at D1 Open to just 0.07 at D126. A <strong>statistically significant regional divergence (p=0.042)</strong> fundamentally changes the optimal holding period by market, driven by the Tokyo Stock Exchange's corporate governance reform creating sustained post-placement re-rating in Japan. The discount paradox — deeper discounts correlating with <strong>lower</strong> subsequent returns (r=−0.304) — reflects information asymmetry rather than snap-back opportunity.</div>
+    </div>
+    <div class="exec-bullets">
+      <ul>
+        <li><strong>HK/China:</strong> Exit at Day 1 Open (+6.35%, 91% positive). Mean turns negative by D63; median crashes to −9.61% at D126.</li>
+        <li><strong>Japan:</strong> Hold to D63–D126. TSE governance reform drives persistent re-rating to +9.13% at D126 — the only market with a rising Sharpe beyond D1.</li>
+        <li><strong>Marketed vs Overnight:</strong> D1 Close hit rate 95% vs 72%. By D126, marketed averages +8.58% vs overnight −2.45%.</li>
+        <li><strong>Basic Materials:</strong> Strongest sector at D63 (+10.69%, n=26). Technology strong at D1 but mean-reverts negative by D63.</li>
+        <li><strong>2025 regime:</strong> 33% of sample with elevated returns (+8.61% D1 Open) — biasing multi-year averages upward.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="three-col">
+    <div>
+      <div class="sec">Aggregate Returns — 607 Deals</div>
+      <table>
+        <thead><tr><th>Horizon</th><th>Mean</th><th>% Pos.</th><th>Sharpe</th></tr></thead>
+        <tbody>
+          <tr class="hi"><td><strong>D1 Open ★</strong></td><td class="pos">+4.80%</td><td class="pos">93%</td><td class="star">0.30</td></tr>
+          <tr><td>D1 Close</td><td class="pos">+3.93%</td><td class="pos">83%</td><td class="neu">0.24</td></tr>
+          <tr><td>D2</td><td class="pos">+3.87%</td><td class="pos">76%</td><td class="neu">0.22</td></tr>
+          <tr><td>D7</td><td class="pos">+2.75%</td><td class="pos">64%</td><td class="neu">0.14</td></tr>
+          <tr><td>D30</td><td class="pos">+2.37%</td><td class="neu">54%</td><td class="neu">0.09</td></tr>
+          <tr><td>D63</td><td class="pos">+2.33%</td><td class="neu">52%</td><td class="neu">0.07</td></tr>
+          <tr><td>D126</td><td class="pos">+2.73%</td><td class="neu">50%</td><td class="neu">0.07</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="sec">Region · Mean Return</div>
+      <table>
+        <thead><tr><th>Horizon</th><th>HK/China</th><th>Japan</th><th>Korea</th></tr></thead>
+        <tbody>
+          <tr><td>D1 Open</td><td class="pos">+6.35%</td><td class="pos">+3.50%</td><td class="pos">+1.03%</td></tr>
+          <tr><td>D7</td><td class="pos">+3.09%</td><td class="pos">+2.71%</td><td class="neg">−1.93%</td></tr>
+          <tr><td>D30</td><td class="pos">+2.20%</td><td class="pos">+3.12%</td><td class="neg">−6.36%</td></tr>
+          <tr><td>D63</td><td class="neg">−0.39%</td><td class="pos">+5.56%</td><td class="neg">−5.59%</td></tr>
+          <tr><td>D126</td><td class="neg">−3.94%</td><td class="pos star">+9.13%</td><td class="pos">+3.53%</td></tr>
+          <tr><td style="font-size:11px;color:#6B7A8D">Sharpe D1</td><td class="neu">0.29</td><td class="star">0.49</td><td class="neu">0.61</td></tr>
+          <tr><td style="font-size:11px;color:#6B7A8D">n</td><td class="neu">289</td><td class="neu">298</td><td class="neu">20 ⚠</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="sec">Deal Type · Mean Return</div>
+      <table>
+        <thead><tr><th>Horizon</th><th>Marketed</th><th>Overnight</th></tr></thead>
+        <tbody>
+          <tr><td>D1 Open</td><td class="pos">+4.13%</td><td class="pos">+5.38%</td></tr>
+          <tr><td>D1 Close %+</td><td class="pos">95%</td><td class="neu">72%</td></tr>
+          <tr><td>D7</td><td class="pos">+3.14%</td><td class="pos">+2.39%</td></tr>
+          <tr><td>D30</td><td class="pos">+3.46%</td><td class="pos">+1.39%</td></tr>
+          <tr><td>D63</td><td class="pos">+5.19%</td><td class="neg">−0.19%</td></tr>
+          <tr><td>D126</td><td class="pos star">+8.58%</td><td class="neg">−2.45%</td></tr>
+          <tr><td style="font-size:11px;color:#6B7A8D">n</td><td class="neu">288</td><td class="neu">319</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="strat-section">
+    <div class="sec">Recommended Unwind Strategy</div>
+    <table class="strat-table">
+      <thead><tr><th style="text-align:left">Market / Type</th><th>Optimal Unwind</th><th>Mean Return</th><th>% Positive</th><th>Sharpe</th><th style="text-align:left">Rationale</th></tr></thead>
+      <tbody>
+        <tr class="best"><td>HK/China — Overnight</td><td class="rec pos">Day 1 Open ★</td><td class="pos">+6.35%</td><td>91%</td><td class="neu">0.29</td><td style="text-align:left;font-size:13px;color:#2D3748;">Median turns negative by D30 — holding destroys alpha</td></tr>
+        <tr><td>HK/China — Marketed</td><td class="rec star">Day 1–2</td><td class="pos">+4.44%</td><td>70%</td><td class="neu">0.19</td><td style="text-align:left;font-size:13px;color:#2D3748;">Better price discovery; same structural decay beyond D2</td></tr>
+        <tr class="best"><td>Japan — Marketed</td><td class="rec pos">D63–D126 ★</td><td class="pos">+9.13%</td><td>61%</td><td class="star">0.32</td><td style="text-align:left;font-size:13px;color:#2D3748;">TSE governance reform — only market where Sharpe rises at D126</td></tr>
+        <tr><td>Japan — Overnight</td><td class="rec star">D30–D63</td><td class="pos">+5.56%</td><td>63%</td><td class="neu">0.26</td><td style="text-align:left;font-size:13px;color:#2D3748;">Similar persistent drift; less consistent than marketed</td></tr>
+        <tr class="warn"><td>Korea — All (⚠ n=20)</td><td class="rec" style="color:#B45309;">Day 1 Open</td><td class="neu">+1.03%</td><td>79%</td><td class="neu">0.61</td><td style="text-align:left;font-size:13px;color:#2D3748;">Negative beyond D2; sample too thin for reliable inference</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="bottom-grid">
+    <div class="insight">
+      <div class="ititle">Key Findings</div>
+      <ul>
+        <li><strong>Japan anomaly:</strong> Only market where Sharpe rises beyond D1 (0.49 → 0.32 at D126). TSE reform drives sustained re-rating. Divergence from HK/China significant at 5% level.</li>
+        <li><strong>Basic Materials standout:</strong> +10.69% mean at D63 (n=26, 65% positive) — strongest sector beyond D5, driven by Japan commodities.</li>
+        <li><strong>Discount paradox:</strong> r=−0.304 at D1. Deeper discounts signal placement risk — not snap-back. Do not size up on discount alone.</li>
+        <li><strong>2025 regime:</strong> 33% of sample at elevated returns (+8.61% D1 Open). Multi-year averages are upward-biased; 2022–2024 is more representative forward.</li>
+      </ul>
+    </div>
+    <div class="insight warn">
+      <div class="ititle">Caveats &amp; Limitations</div>
+      <ul>
+        <li><strong>Survivorship bias:</strong> 6 delisted tickers excluded — likely worst performers, creating mild upward bias at longer horizons.</li>
+        <li><strong>No beta adjustment:</strong> Returns are raw vs offer price. Market-wide moves contaminate the signal.</li>
+        <li><strong>Korea n=20:</strong> All Korea findings are directional only — insufficient for reliable sub-group inference.</li>
+        <li><strong>With more time:</strong> Beta-adjust vs regional index, multi-factor regression (region × type × discount), lock-up expiry overlay at D126.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="extra-credit">
+    <div class="ec-header">
+      <div class="ec-badge">★ Extra Credit</div>
+      <div class="ec-title">High-profile North Asia deals potentially absent from CMG dataset — identified via Bloomberg, HKEX disclosures, TSE announcements</div>
+    </div>
+    <div class="ec-grid">
+      <div class="ec-item"><div class="ec-name">Japan Post Holdings</div><div class="ec-meta">Japan · Nov 2023 · ~$10B</div><div class="ec-reason">Government divestment — outside corporate FO classification</div></div>
+      <div class="ec-item"><div class="ec-name">SoftBank Group</div><div class="ec-meta">Japan · Sep 2023 · ~$5B</div><div class="ec-reason">Arm IPO-linked block — likely classified separately</div></div>
+      <div class="ec-item"><div class="ec-name">BYD Company</div><div class="ec-meta">HK · Mar 2025 · ~$6.8B</div><div class="ec-reason">Rights component may exclude from FO scope</div></div>
+      <div class="ec-item"><div class="ec-name">Rakuten Group</div><div class="ec-meta">Japan · Apr 2023 · ~$2.2B</div><div class="ec-reason">Emergency rights issue — not classified as follow-on</div></div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
