@@ -15,7 +15,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import streamlit as st
-import streamlit.components.v1 as components
 
 # ---------------------------------------------------------------------------
 # Config
@@ -899,11 +898,11 @@ def main():
     /* ---- Tabs ---- */
     div[data-testid="stTabs"] button {{
         font-family: 'Times New Roman', Times, serif !important;
-        font-size: 0.9rem;
-        font-weight: 600;
+        font-size: 1.05rem;
+        font-weight: 700;
         color: #4a6278;
         letter-spacing: 0.03em;
-        padding: 8px 18px;
+        padding: 8px 20px;
         border-radius: 0;
         border-bottom: 2px solid transparent;
     }}
@@ -947,6 +946,12 @@ def main():
 
     /* ---- Info/warning boxes ---- */
     .stAlert {{ border-radius: 4px; }}
+
+    /* ---- Permanently visible sidebar — hide collapse/expand toggles ---- */
+    [data-testid="collapsedControl"] {{ display: none !important; }}
+    button[data-testid="stBaseButton-header"] {{ display: none !important; }}
+    [data-testid="stSidebarCollapseButton"] {{ display: none !important; }}
+    section[data-testid="stSidebar"] > div:first-child > button {{ display: none !important; }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -993,34 +998,6 @@ def main():
     if len(filtered) == 0:
         st.warning("No deals match the current filters. Please broaden your selection.")
         return
-
-    # Strip "keyboard_double_arrow_*" tooltip from Streamlit's sidebar toggle button.
-    # That native browser title tooltip cannot be suppressed via CSS alone, so we
-    # access the parent document from a sandboxed component iframe.
-    components.html("""
-<script>
-(function() {
-    function stripKeyboardTitles() {
-        try {
-            var p = window.parent.document;
-            p.querySelectorAll('button[title]').forEach(function(b) {
-                if (b.getAttribute('title').indexOf('keyboard') !== -1) {
-                    b.removeAttribute('title');
-                }
-            });
-        } catch(e) {}
-    }
-    stripKeyboardTitles();
-    try {
-        var obs = new MutationObserver(stripKeyboardTitles);
-        obs.observe(window.parent.document.body, {
-            subtree: true, childList: true,
-            attributes: true, attributeFilter: ['title']
-        });
-    } catch(e) {}
-})();
-</script>
-""", height=0, scrolling=False)
 
     # Tabs — no emojis
     tabs = st.tabs([
