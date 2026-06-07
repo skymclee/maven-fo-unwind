@@ -1,0 +1,41 @@
+Maven Securities — North Asia FO Unwind: Data Quality Log
+Generated: 2026-06-07
+=============================================================
+
+=== PRICE DATA FETCH SUMMARY ===
+Total North Asia deals:      607
+Deals with valid price data: 601  (99.0%)
+Failed tickers:              6    (1.0%)
+
+=== FAILED TICKERS (no yfinance data — likely delisted) ===
+4485.T    — Japan — possibly delisted or ticker changed post-deal
+2987.T    — Japan — possibly delisted (AnyMind Group)
+9995.T    — Japan — possibly delisted or absorbed
+3493.T    — Japan — possibly delisted (Advance Create Co.)
+091990.KS — Korea — ticker may have changed post-deal
+3278.T    — Japan — possibly delisted or absorbed
+
+All 6 failed tickers assigned NaN for all return horizons. They remain in
+deal count but are excluded from return calculations.
+
+=== METHODOLOGY: SPLIT ADJUSTMENT ===
+Price source: Yahoo Finance (yfinance 1.4.1), raw prices (auto_adjust=False)
+Split adjustment: offer_price divided by cumulative product of all splits
+after the pricing date. Corrects for yfinance backward-applied adjustments.
+
+Formula: return = raw_price / (offer_price / cumulative_split_factor) - 1
+
+Critical for Japan: many TSE companies split 2023-2026 (TSE price reform).
+Without correction Japan D1 Close mean was -13.5%; after correction: +3.57%.
+
+=== KNOWN DATA QUALITY ISSUES ===
+1. VWAP: Approximated as (H+L+C)/3 — not actual traded VWAP.
+2. Rights/bonus issues in HK: Some misclassified as splits in yfinance.
+   May distort returns for <10 HK deals. ±200% clip removes worst cases.
+3. Recent deals (<126 trading days old): NaN at longer horizons.
+4. No deals were clipped at the ±200% boundary in the final dataset.
+
+=== SECTOR REGROUPING ===
+Utilities + Energy → "Energy & Utilities" (both <10 deals individually)
+1 deal with missing sector → "Other"
+All others retained as-is.
