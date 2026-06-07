@@ -540,24 +540,6 @@ def tab_summary(df):
     disp = style_metrics_table(mdf)
     st.dataframe(disp, use_container_width=True, hide_index=True)
 
-    st.markdown("---")
-    st.markdown("#### Key Observations")
-    # Auto-generate observations based on data
-    valid_mdf = mdf.dropna(subset=["mean"])
-    if len(valid_mdf) > 0:
-        best_mean_row   = valid_mdf.loc[valid_mdf["mean"].idxmax()]
-        best_sharpe_row = valid_mdf.dropna(subset=["sharpe"]).loc[valid_mdf.dropna(subset=["sharpe"])["sharpe"].idxmax()]
-        obs = [
-            f"**Best mean return** is at **{best_mean_row['label']}** "
-            f"({best_mean_row['mean']:.1%} mean, {best_mean_row['pct_pos']:.0%} deals positive, n={int(best_mean_row['n'])})",
-            f"**Best risk-adjusted return (Sharpe)** is at **{best_sharpe_row['label']}** "
-            f"(ratio {best_sharpe_row['sharpe']:.2f})",
-            f"Day 1 open return (immediate flip): {mdf.loc[mdf['label']=='D1 Open','mean'].values[0]:.2%} mean",
-        ]
-        for o in obs:
-            st.markdown(f"- {o}")
-    else:
-        st.info("Run `fetch_prices.py` first to populate price data.")
 
 
 # ---------------------------------------------------------------------------
