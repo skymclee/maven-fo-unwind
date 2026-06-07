@@ -7,6 +7,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 import os
+import base64
 import logging
 import numpy as np
 import pandas as pd
@@ -19,8 +20,8 @@ import streamlit as st
 # Config
 # ---------------------------------------------------------------------------
 st.set_page_config(
-    page_title="Maven | North Asia FO Unwind — Sky Lee",
-    page_icon="📊",
+    page_title="Maven Securities | North Asia FO Unwind — Sky Lee",
+    page_icon=None,
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -63,8 +64,18 @@ COLORS = {
 }
 
 PLOTLY_TEMPLATE = "plotly_white"
-# Continuous colour sequence used by bar / line charts: navy → green
-MAVEN_COLORS = [NAVY, GREEN, "#4caf80", "#a8d5b5", "#8dafc4", "#c0cfe0"]
+MAVEN_COLORS    = [NAVY, GREEN, "#4caf80", "#a8d5b5", "#8dafc4", "#c0cfe0"]
+PLOTLY_FONT     = dict(family="Times New Roman, Times, serif", size=12, color="#0d1f2d")
+
+
+@st.cache_data(show_spinner=False)
+def _logo_b64():
+    """Return base64-encoded Maven logo for inline HTML embedding."""
+    logo_path = os.path.join(os.path.dirname(__file__), "maven_logo.png")
+    if not os.path.exists(logo_path):
+        logo_path = "maven_logo.png"
+    with open(logo_path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
 
 # ---------------------------------------------------------------------------
 # Data loading
@@ -238,6 +249,7 @@ def mean_return_line(mdf, title="Mean Return by Horizon", color_col=None):
         yaxis_tickformat=".1%",
         legend_title=color_col or "",
         hovermode="x unified",
+        font=PLOTLY_FONT,
     )
     fig.update_traces(hovertemplate="%{y:.2%}")
     return fig
@@ -260,6 +272,7 @@ def pct_positive_bar(mdf, title="% Deals with Positive Return"):
         yaxis_title="% Positive",
         yaxis_tickformat=".0%",
         yaxis_range=[0, 1],
+        font=PLOTLY_FONT,
     )
     return fig
 
@@ -280,6 +293,7 @@ def grouped_bar(long_df, x_col, y_col, color_col, title, y_fmt=".1%"):
         yaxis_title="Mean Return",
         yaxis_tickformat=y_fmt,
         hovermode="x unified",
+        font=PLOTLY_FONT,
     )
     return fig
 
@@ -318,9 +332,10 @@ def sector_heatmap(df_all, min_n=1):
         hovertemplate="Sector: %{y}<br>Horizon: %{x}<br>Return: %{z:.2f}%<extra></extra>",
     ))
     fig.update_layout(
-        title="Mean Return by Sector × Horizon (heatmap)",
+        title="Mean Return by Sector and Horizon",
         template=PLOTLY_TEMPLATE,
         height=400 + len(sectors) * 25,
+        font=PLOTLY_FONT,
     )
     return fig
 
@@ -343,6 +358,7 @@ def deal_trajectory_chart(row):
         yaxis_title="Return vs Offer Price",
         yaxis_tickformat=".1%",
         template=PLOTLY_TEMPLATE,
+        font=PLOTLY_FONT,
     )
     return fig
 
@@ -382,8 +398,6 @@ def style_metrics_table(mdf):
 # Sidebar filters
 # ---------------------------------------------------------------------------
 def sidebar_filters(df):
-    st.sidebar.header("Filters")
-
     regions  = ["All"] + sorted(df["Region"].dropna().unique().tolist())
     sectors  = ["All"] + sorted(df["Sector"].dropna().unique().tolist())
     sizes    = ["All"] + [s for s in DEAL_SIZE_ORDER if s in df["Deal Size Bucket"].unique()]
@@ -597,6 +611,7 @@ def tab_characteristics(df):
         xaxis_title="Horizon", yaxis_title="% Positive",
         yaxis_tickformat=".0%", yaxis_range=[0, 1],
         template=PLOTLY_TEMPLATE,
+        font=PLOTLY_FONT,
     )
     st.plotly_chart(fig2, use_container_width=True)
 
@@ -800,59 +815,192 @@ def tab_interactions(df, min_n):
 # Main
 # ---------------------------------------------------------------------------
 def main():
-    # CSS overrides — Maven navy/green brand
-    st.markdown("""
+    logo_b64 = _logo_b64()
+
+    # ------------------------------------------------------------------
+    # Global CSS — Times New Roman, Maven navy/green brand
+    # ------------------------------------------------------------------
+    st.markdown(f"""
     <style>
-    [data-testid="metric-container"] {
-        background: #eaf4ed;
-        border: 1px solid #2e7d4f;
-        border-radius: 8px;
-        padding: 12px 16px;
-    }
-    [data-testid="metric-container"] label {color: #1a3a5c !important; font-weight: 600;}
-    div[data-testid="stTabs"] button {font-size: 0.95rem; font-weight: 600; color: #1a3a5c;}
-    div[data-testid="stTabs"] button[aria-selected="true"] {
+    /* ---- Typography ---- */
+    html, body, [class*="css"], .stApp, .stMarkdown,
+    .stTextInput, .stSelectbox, .stMultiSelect, .stSlider,
+    button, input, label, p, span, div {{
+        font-family: 'Times New Roman', Times, serif !important;
+    }}
+    h1, h2, h3, h4, h5, h6 {{
+        font-family: 'Times New Roman', Times, serif !important;
+        color: #1a3a5c !important;
+        letter-spacing: 0.02em;
+    }}
+
+    /* ---- Page background ---- */
+    .stApp {{ background: #ffffff; }}
+
+    /* ---- Header banner ---- */
+    .maven-header {{
+        display: flex;
+        align-items: center;
+        background: #0d1f2d;
+        padding: 18px 32px;
+        margin: -1rem -1rem 1.5rem -1rem;
         border-bottom: 3px solid #2e7d4f;
-        color: #2e7d4f !important;
-    }
-    section[data-testid="stSidebar"] {background: #0d1f2d;}
-    section[data-testid="stSidebar"] * {color: #eaf4ed !important;}
-    section[data-testid="stSidebar"] .stMarkdown p {color: #a8d5b5 !important;}
-    h1 {color: #1a3a5c !important;}
-    h2, h3, h4 {color: #1a3a5c !important;}
+    }}
+    .maven-header img {{
+        height: 52px;
+        margin-right: 28px;
+    }}
+    .maven-header-text {{
+        display: flex;
+        flex-direction: column;
+    }}
+    .maven-header-title {{
+        font-family: 'Times New Roman', Times, serif !important;
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #ffffff;
+        line-height: 1.2;
+        letter-spacing: 0.04em;
+    }}
+    .maven-header-sub {{
+        font-family: 'Times New Roman', Times, serif !important;
+        font-size: 0.82rem;
+        color: #a8d5b5;
+        margin-top: 4px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }}
+    .maven-divider {{
+        border: none;
+        border-top: 1px solid #d0dde8;
+        margin: 0.5rem 0 1.2rem 0;
+    }}
+
+    /* ---- Metric cards ---- */
+    [data-testid="metric-container"] {{
+        background: #f7fbf9;
+        border: 1px solid #2e7d4f;
+        border-radius: 4px;
+        padding: 14px 18px;
+    }}
+    [data-testid="metric-container"] label {{
+        color: #1a3a5c !important;
+        font-weight: 600;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }}
+    [data-testid="metric-container"] [data-testid="metric-value"] {{
+        color: #1a3a5c !important;
+        font-size: 1.5rem !important;
+    }}
+
+    /* ---- Tabs ---- */
+    div[data-testid="stTabs"] button {{
+        font-family: 'Times New Roman', Times, serif !important;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #4a6278;
+        letter-spacing: 0.03em;
+        padding: 8px 18px;
+        border-radius: 0;
+        border-bottom: 2px solid transparent;
+    }}
+    div[data-testid="stTabs"] button[aria-selected="true"] {{
+        border-bottom: 2px solid #2e7d4f !important;
+        color: #1a3a5c !important;
+    }}
+    div[data-testid="stTabs"] button:hover {{
+        color: #1a3a5c !important;
+        background: #f0f6f2 !important;
+    }}
+
+    /* ---- Sidebar ---- */
+    section[data-testid="stSidebar"] {{
+        background: #0d1f2d !important;
+    }}
+    section[data-testid="stSidebar"] * {{
+        color: #d6e8f0 !important;
+        font-family: 'Times New Roman', Times, serif !important;
+    }}
+    section[data-testid="stSidebar"] h1,
+    section[data-testid="stSidebar"] h2,
+    section[data-testid="stSidebar"] h3 {{
+        color: #ffffff !important;
+    }}
+    section[data-testid="stSidebar"] .stMarkdown p {{
+        color: #a8d5b5 !important;
+        font-size: 0.82rem;
+    }}
+    section[data-testid="stSidebar"] hr {{
+        border-color: #2e7d4f;
+        opacity: 0.5;
+    }}
+
+    /* ---- Dataframe ---- */
+    [data-testid="stDataFrame"] th {{
+        background: #1a3a5c !important;
+        color: #ffffff !important;
+        font-family: 'Times New Roman', Times, serif !important;
+    }}
+
+    /* ---- Info/warning boxes ---- */
+    .stAlert {{ border-radius: 4px; }}
     </style>
     """, unsafe_allow_html=True)
 
-    st.title("Maven Securities — North Asia Follow-On Unwind Analysis | Sky Lee")
-    st.markdown(
-        "Analysing **follow-on / placement deals** in HK/China, Japan, and Korea "
-        "from 2022 to YTD 2026. Returns are measured vs the local-currency offer price."
-    )
+    # ------------------------------------------------------------------
+    # Header banner (logo + title)
+    # ------------------------------------------------------------------
+    st.markdown(f"""
+    <div class="maven-header">
+        <img src="data:image/png;base64,{logo_b64}" alt="Maven Securities">
+        <div class="maven-header-text">
+            <div class="maven-header-title">North Asia Follow-On Offering — Unwind Analysis</div>
+            <div class="maven-header-sub">Sky Lee &nbsp;|&nbsp; HK / China &nbsp;&bull;&nbsp; Japan &nbsp;&bull;&nbsp; Korea &nbsp;|&nbsp; 2022 – YTD 2026</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     # Load data
     master, has_prices = load_master()
 
     if not has_prices:
         st.warning(
-            "⚠️ **Price data not found.** "
-            "Run `python3 fetch_prices.py` from the project directory to build the returns cache, "
-            "then restart the app. Deal metadata is shown below but return charts will be empty."
+            "Price data not found. Run `python3 fetch_prices.py` from the project "
+            "directory to build the returns cache, then restart the app."
         )
 
-    # Sidebar filters
+    # Sidebar — logo + filters
+    st.sidebar.markdown(
+        f'<div style="text-align:center; padding: 12px 8px 4px 8px;">'
+        f'<img src="data:image/png;base64,{logo_b64}" style="width:85%; opacity:0.92;">'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+    st.sidebar.markdown(
+        '<hr style="border-color:#2e7d4f; margin: 8px 0 14px 0;">',
+        unsafe_allow_html=True,
+    )
+    st.sidebar.markdown(
+        '<p style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.1em; '
+        'color:#7ba8c4 !important; margin-bottom:6px;">Filters</p>',
+        unsafe_allow_html=True,
+    )
+
     filtered, min_n = sidebar_filters(master)
     if len(filtered) == 0:
         st.warning("No deals match the current filters. Please broaden your selection.")
         return
 
-    # Tabs
+    # Tabs — no emojis
     tabs = st.tabs([
-        "📊 Summary",
-        "🗺️ By Region",
-        "🏭 By Sector",
-        "📦 By Deal Characteristics",
-        "🔍 Deal Explorer",
-        "🔗 Interactions",
+        "Summary",
+        "By Region",
+        "By Sector",
+        "Deal Characteristics",
+        "Deal Explorer",
+        "Interaction Analysis",
     ])
 
     with tabs[0]:
